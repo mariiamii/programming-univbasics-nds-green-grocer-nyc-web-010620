@@ -1,3 +1,6 @@
+CLEARANCE_ITEM_DISCOUNT_RATE = 0.20
+BIG_PURCHASE_DISCOUNT_RATE = 0.10
+
 def find_item_by_name_in_collection(name, collection)
   i = 0
   while i < collection.length do
@@ -22,7 +25,27 @@ def consolidate_cart(cart)
     end
     i += 1
   end
+
   result
+end
+
+
+def mk_coupon_hash(c)
+  rounded_unit_price = (c[:cost].to_f * 1.0 / c[:num]).round(2)
+  {
+    :item => "#{c[:item]} W/COUPON",
+    :price => rounded_unit_price,
+    :count => c[:num]
+  }
+end
+
+# A nice "First Order" method to use in apply_coupons
+
+def apply_coupon_to_cart(matching_item, coupon, cart)
+  matching_item[:count] -= coupon[:num]
+  item_with_coupon = mk_coupon_hash(coupon)
+  item_with_coupon[:clearance] = matching_item[:clearance]
+  cart << item_with_coupon
 end
 
 def apply_coupons(cart, coupons)
@@ -38,6 +61,7 @@ def apply_coupons(cart, coupons)
     end
     i += 1
   end
+
   cart
 end
 
@@ -51,6 +75,7 @@ def apply_clearance(cart)
     end
     i += 1
   end
+
   cart
 end
 
@@ -66,5 +91,10 @@ def checkout(cart, coupons)
     total += items_total_cost(ccart[i])
     i += 1
   end
+
   total >= 100 ? total * (1.0 - BIG_PURCHASE_DISCOUNT_RATE) : total
+end
+
+def items_total_cost(i)
+  i[:count] * i[:price]
 end
